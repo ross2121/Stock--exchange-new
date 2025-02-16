@@ -3,6 +3,8 @@ export const Cancel_Order="CANCEL_ORDER";
 export const ON_RAMP="RAMP_ORDER";
 export const GET_OPEN_ORDER="GET_OPEN_ORDERS";
 export const GET_DEPTH="GET_DEPTH";
+export const GET_TRADE="GET_TRADE";
+export const GET_TICKER="GET_TICKER"
 export type MessageFromOrderbook={
 type:"DEPTH",
 payload:{
@@ -40,4 +42,21 @@ payload:{
         side:"buy"|"sell",
         userId:string
     }[]
+}|{
+    type:"TRADES",
+    payload:{
+        isbuyer:boolean,
+        price:string,
+        quantity:string,
+        symbol:string,
+        market:string,
+    }
+}|{
+    type:"TICKER",
+    payload:{
+        lastPrice:number,
+        highestBid:number,
+        lowestAsk:number,
+        volume24h:number
+    }
 }

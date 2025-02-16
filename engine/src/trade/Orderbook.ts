@@ -14,6 +14,14 @@ export interface Fill{
     otherUserId:string,
     marketOrderId:String
 }
+export interface Trade{
+    id:number,
+    isBuyerMaker:boolean,
+    price:number,
+    quantity:number,
+    timestamp:number,
+    market:string |undefined
+}
 export class Orderbook{
     bids:Order[];
     asks:Order[];
@@ -21,12 +29,14 @@ export class Orderbook{
     quoteAsset:string=BASE_CURRENCY;
     lastTradeId:number;
     currentprice:number
+    trades:Trade[];
     constructor(baseAsset:string,bids:Order[],asks:Order[],lastTradeId:number,currentprice:number){
         this.bids=bids;
         this.asks=asks;
         this.baseAsset=baseAsset
         this.lastTradeId=lastTradeId||0;
         this.currentprice=currentprice||0
+        this.trades=[];
     }
     ticker(){
         return `${this.baseAsset}_${this.quoteAsset}`
@@ -41,14 +51,16 @@ export class Orderbook{
         }
     }
    
-   matchbid(order:Order):{fills:Fill[],executedQty:number}{
+   matchbid(order:Order,market:string):{fills:Fill[],executedQty:number}{
     const fills:Fill[]=[];
     let executedQty=0;
-    for(let i=0;i<this.asks.length;i++){
+    console.log("assk finea",this.asks);
+    
+    try{for(let i=0;i<this.asks.length;i++){
         if(this.asks[i].userId==order.userId){
             return {fills:[],executedQty:0}
         }
-        else if(this.asks[i].price<=order.price&&executedQty<order.quantity){
+        else if(this.asks[i].price<=order.price && executedQty<order.quantity){
             const filledqty=Math.min((order.quantity-executedQty),this.asks[i].quantity);
             executedQty+=filledqty;
             this.asks[i].filled+=filledqty;
@@ -59,24 +71,33 @@ export class Orderbook{
             otherUserId:this.asks[i].userId,
             marketOrderId:this.asks[i].orderId
          })
+         this.trades.push({
+            id:Math.random(),
+            isBuyerMaker:true,
+            price:this.asks[i].price,
+             quantity:this.asks[i].quantity,
+             timestamp:Date.now(),
+             market
+       })
         }
-    }
+    }}catch(e){ console.log(e)}
     for(let i=0;i<this.asks.length;i++){
-    if(this.asks[i].filled===this.asks[i].quantity){
+    if(this.asks[i].filled===this.asks[i].quantity){ 
         this.asks.splice(i,1);
         i--;
     }
     }
+    console.log("Match bid result:", { fills, executedQty });
     return{
         fills,
         executedQty
     }
    }
-   addorder(order:Order):{
+   addorder(order:Order,market:string):{
     executedQty:number,
     fills:Fill[]}{
       if(order.side=="buy"){
-        const {executedQty,fills}=this.matchbid(order);
+        const {executedQty,fills}=this.matchbid(order,market);
          order.filled=executedQty;
          if(executedQty===order.quantity){
             return{
@@ -93,7 +114,7 @@ export class Orderbook{
             fills
          }
       }else{
-        const {executedQty,fills}=this.matchask(order);
+        const {executedQty,fills}=this.matchask(order,market);
         order.filled=executedQty;
         if(executedQty===order.quantity){
             return{
@@ -111,7 +132,7 @@ export class Orderbook{
         }
       }
    }
-   matchask(order:Order):{fills:Fill[],executedQty:number}{
+   matchask(order:Order,market:string):{fills:Fill[],executedQty:number}{
     const fills:Fill[]=[];
     let executedQty=0;
     for(let i=0;i<this.bids.length;i++){
@@ -123,6 +144,7 @@ export class Orderbook{
         }
         else if(this.bids[i].price>=order.price&&executedQty<order.quantity){
             const remainingqty=Math.min((order.quantity-executedQty),this.bids[i].quantity);
+            console.log(this.bids);
             executedQty+=remainingqty;
             this.bids[i].filled+=remainingqty;
             fills.push({
@@ -131,6 +153,14 @@ export class Orderbook{
                 tradeId:this.lastTradeId++,
                 otherUserId:this.bids[i].userId,
                 marketOrderId:this.bids[i].orderId
+            })
+            this.trades.push({
+                 id:Math.random(),
+                 isBuyerMaker:true,
+                 price:this.bids[i].price,
+                  quantity:this.bids[i].quantity,
+                  timestamp:Date.now(),
+                  market 
             })
         }
     }
@@ -176,6 +206,39 @@ export class Orderbook{
     const asks=this.asks.filter(x=>x.userId===userId);
     const bids=this.bids.filter(x=>x.userId===userId);
     return[...asks,...bids];
+   }
+   
+   getTicker(market:string){
+    const trade=this.trades.filter((trade)=>trade.market===market)
+    if(!trade){
+    throw new Error("error")
+    }
+        if (trade.length === 0) {
+            return null; 
+        }
+        const lastPrice = trade.length > 0 ? trade[trade.length - 1].price : 0;
+    const highestBid = this.bids.length > 0 ? Math.max(...this.bids.map(bid => bid.price)) : 0;
+    const lowestAsk = this.asks.length > 0 ? Math.min(...this.asks.map(ask => ask.price)) : 0;
+    const now = Date.now();
+    const volume24h = this.trades
+        .filter(trade => now - trade.timestamp <= 24 * 60 * 60 * 1000) 
+        .reduce((sum, trade) => sum + trade.quantity, 0);
+        return {
+            lastPrice,
+            highestBid,
+            lowestAsk,
+            volume24h,
+            market
+        };
+    
+   }
+   gettrades(market:string){
+    const trade=this.trades.filter((trade)=>trade.market===market)
+     if(!trade){
+     throw new Error()
+     }
+    console.log("trade",trade);
+    return trade;
    }
    getDepth(){
     const bids:[string,string][]=[];

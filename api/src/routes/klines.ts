@@ -1,16 +1,17 @@
 import { Client } from 'pg';
 import { Router } from 'express';
 
-const pgclient = new Client({
-    user: 'youval21',
+const client=new Client({
+    user: 'your_user',
     host: 'localhost',
-    database: 'exchange',
-    password: 'youval',
+    database: 'my_database',
+    password: 'your_password',  
     port: 5432,
-});
-
-pgclient.connect();
-
+})
+try{client.connect();}
+catch(e){
+    console.log(e)
+}
 export const klinerouter = Router();
 // @ts-ignore
 klinerouter.get("/", async (req, res) => {
@@ -40,7 +41,7 @@ klinerouter.get("/", async (req, res) => {
         const start = new Date(Number(startTime) * 1000);
         const end = new Date(Number(endTime) * 1000);
 
-        const result = await pgclient.query(query, [start, end]);
+        const result = await client.query(query, [start, end]);
 
         res.json(result.rows.map(x => ({
             close: x.close,

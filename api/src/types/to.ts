@@ -1,4 +1,4 @@
-import { Cancel_Order,CREATE_ORDER,GET_DEPTH,GET_OPEN_ORDER,ON_RAMP } from ".";
+import { Cancel_Order,CREATE_ORDER,GET_DEPTH,GET_OPEN_ORDER,ON_RAMP,GET_TRADE,GET_TICKER } from ".";
 export type Messagetoengine={
     type:typeof CREATE_ORDER,
     data:{
@@ -31,5 +31,17 @@ export type Messagetoengine={
         amount:string,
         userId:string,
         txnid:string
+    }
+}|{
+   type:typeof GET_TRADE,
+   data:{
+     market:string
+   }
+  
+
+}|{
+    type:typeof GET_TICKER,
+    data:{
+      market:string
     }
 }

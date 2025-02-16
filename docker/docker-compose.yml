@@ -7,9 +7,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: exchange
-      POSTGRES_USER: youval21
-      POSTGRES_PASSWORD: youval
+      POSTGRES_DB: my_database
+      POSTGRES_USER: your_user
+      POSTGRES_PASSWORD: your_password
     volumes:
       - timescale-data:/var/lib/postgresql/data
 

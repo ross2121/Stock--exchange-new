@@ -12,7 +12,7 @@ describe("Simple orders", () => {
             side: "buy" as ("buy" | "sell"),
             userId: "1"
         };
-        const { fills, executedQty } = orderbook.addorder(order);
+        const { fills, executedQty } = orderbook.addorder(order,"TATA_INR");
         expect(fills.length).toBe(0);
         expect(executedQty).toBe(0);
     });
@@ -35,7 +35,7 @@ describe("Simple orders", () => {
             side: "sell" as ("buy" | "sell"),
             userId: "2"
         };
-        const { fills, executedQty } = orderbook.addorder(order);
+        const { fills, executedQty } = orderbook.addorder(order,"TATA_INR");
         expect(fills.length).toBe(1);
         expect(executedQty).toBe(1);
     });
@@ -66,7 +66,7 @@ describe("Simple orders", () => {
             side: "buy" as ("buy" | "sell"),
             userId: "3"
         };
-        const { fills, executedQty } = orderbook.addorder(order);
+        const { fills, executedQty } = orderbook.addorder(order,"TATA_INR");
         expect(fills.length).toBe(1);
         expect(executedQty).toBe(1);
         expect(orderbook.bids.length).toBe(2);
@@ -89,7 +89,7 @@ describe("Simple orders", () => {
             side:"sell" as ("buy"|"sell"),
             userId:'1'
         }
-        const {fills,executedQty}=orderbook.addorder(order);
+        const {fills,executedQty}=orderbook.addorder(order,"TATA_INR");
         expect(fills.length).toBe(0);
         expect(executedQty).toBe(0);
     })
@@ -112,7 +112,7 @@ describe("Self trade Prevention",()=>{
             side:"sell" as ("buy"|"sell"),
             userId:'1'
         }
-        const {fills,executedQty}=orderbook.addorder(order);
+        const {fills,executedQty}=orderbook.addorder(order,"TATA_INR");
         expect(fills.length).toBe(0);
         expect(executedQty).toBe(0);
     })
@@ -176,7 +176,7 @@ describe("Precission errors are taken care of", () => {
             side: "sell" as ("buy" | "sell"),
             userId: "3"
         };
-        const { fills, executedQty } = orderbook.addorder(order);
+        const { fills, executedQty } = orderbook.addorder(order,"TATA_INR");
         expect(fills.length).toBe(1);
         expect(orderbook.bids.length).toBe(0);
         expect(orderbook.asks.length).toBe(1);

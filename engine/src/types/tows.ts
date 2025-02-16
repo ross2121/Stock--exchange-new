@@ -1,11 +1,11 @@
 export type TickerUpdateMessage={
     stream:string,
     data:{
-        c?:string,
-        h?:string,
-        l?:string,
-        v?:string,
-        V?:string,
+        c?:number,
+        h?:number,
+        l?:number,
+        v?:number,
+        V?:number,
         s?:string,
         id:number,
         e:"ticker"

@@ -1,6 +1,6 @@
 import { ReddisManager } from "../redismanager"
 import { ORDER_UPDATE, TRADE_ADDED } from "../types"
-import { MessagefromAPi,CANCEL_ORDER,CREATE_ORDER, GET_OPEN_ORDERS, GET_DEPTH } from "../types/fromapi"
+import { MessagefromAPi,CANCEL_ORDER,CREATE_ORDER, GET_OPEN_ORDERS, GET_DEPTH, GET_TRADE, GET_TICKER } from "../types/fromapi"
 import { ON_RAMP } from "../types/toapi"
 import { DEPTH_UPDATE } from "./events"
 import { Fill, Orderbook } from "./Orderbook"
@@ -177,6 +177,27 @@ private orderbooks:Orderbook[]=[]
                 e:"depth",
             }
         })
+    
+    }
+    publicwsticker(market:string){
+        const orderbook=this.orderbooks.find(o=>o.ticker()===market);
+        if(!orderbook){
+            return;
+        }
+        const markets=orderbook.getTicker(market);
+        
+            ReddisManager.getInstance().publishMessage(`ticker@${market}`,{
+                stream:`ticker@${market}`,
+                data:{
+                   e:"ticker",
+                    c:markets?.lastPrice,
+                     V:markets?.volume24h,
+                     h:markets?.highestBid,
+                     l:markets?.lowestAsk,
+                     v:markets?.volume24h,
+                   id:Math.random(),
+                }
+            })
     }
     publicWstrades(fills:Fill[],userId:string,market:string){
         fills.forEach(fill=>{
@@ -215,6 +236,7 @@ fills.forEach(fill=>{
             case CREATE_ORDER:
                  try{
                     const {executedQty,fills,orderID}=this.createOrder(message.data.market,message.data.price,message.data.quantity,message.data.side,message.data.userId);
+                    console.log(message.data.price);
                     ReddisManager.getInstance().sendToApi(clientId,{
                         type:"ORDER_PLACED",
                         payload:{ 
@@ -325,6 +347,52 @@ fills.forEach(fill=>{
                             })
                         }
                         break;
+                        case GET_TRADE:
+                            try{
+                                const market=message.data.market;
+                                const orderbook=this.orderbooks.find(o=>o.ticker()===market)
+                                if(!orderbook){
+                                    throw new Error("new orderbook")
+                                }
+                                ReddisManager.getInstance().sendToApi(clientId,{
+                                    type: "TRADE",
+                                    payload: orderbook.gettrades(market).map((trade) => ({
+                                        id: trade.id,
+                                        isBuyerMaker: trade.isBuyerMaker,
+                                        price: trade.price,
+                                        quantity: trade.quantity,
+                                        timestamp: trade.timestamp,
+                                    }))
+                                })
+                            }catch(e){
+                                console.log(e);
+                                // ReddisManager.getInstance().sendToApi(clientId,{
+                                //     type:"TRADE",
+                                //     payload:{
+                                        
+                                //     }
+                                // }) 
+                            }
+                           case GET_TICKER:
+                            try {
+                                const market=message.data.market;
+                                const orderbook=this.orderbooks.find(o=>o.ticker()===market)
+                                if(!orderbook){
+                                    throw new Error("new orderbook")
+                                }
+                                ReddisManager.getInstance().sendToApi(clientId,{
+                                    type: "TICKER",
+                                     payload:{
+                                        lastPrice:orderbook.getTicker(market)?.lastPrice||0,
+                                        highestBid:orderbook.getTicker(market)?.highestBid||0,
+                                        lowestAsk:orderbook.getTicker(market)?.lowestAsk||0,
+                                        volume24h:orderbook.getTicker(market)?.volume24h||0
+                                     }
+                                })
+                            } catch (error) {
+                                
+                            }
+                            
         }
     }
     updateDborders(order:Order,executedQty:number,fills:Fill[],market:string){
@@ -367,12 +435,15 @@ fills.forEach(fill=>{
         userId
        }   
        console.log("check1",order);
-       const {fills,executedQty}=orderbook.addorder(order);
+       console.log("Creating order:", order);
+       const {fills,executedQty}=orderbook.addorder(order,market);
        this.updateBalance(userId,baseAsset,quoteAsset,side,fills);
        this.createDbtrades(fills,market,userId);
        this.updateDborders(order,executedQty,fills,market);
        this.publicwsDepthUpdates(fills,price,side,market);
        this.publicWstrades(fills,userId,market);
+       this.publicwsticker(market);
+      
     //    this.sendticker(market)
        return {executedQty,fills,orderID:order.orderId};  
     }

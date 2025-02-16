@@ -9,7 +9,6 @@ depthrouter.get("/",async(req,res)=>{
         data:{
             market:symbol as string
         },    
-    
     })
     res.json(response.payload)
 })

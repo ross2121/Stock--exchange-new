@@ -37,4 +37,22 @@ export type MessagetoAPi={
 }|{
     type:"OPEN_ORDERS",
     payload:Order[]
+}|{
+    type:"TRADE",
+    payload:{
+        id:number,
+        isBuyerMaker:boolean,
+        price:number,
+        quantity:number,
+        timestamp:number
+    }[]
+    
+}|{
+    type:"TICKER",
+    payload:{
+        lastPrice:number,
+        highestBid:number,
+        lowestAsk:number,
+        volume24h:number
+    }
 }

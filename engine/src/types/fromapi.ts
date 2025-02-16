@@ -4,6 +4,8 @@ export const ON_RAMP = "ON_RAMP";
 
 export const GET_DEPTH = "GET_DEPTH";
 export const GET_OPEN_ORDERS = "GET_OPEN_ORDERS";
+export const GET_TRADE="GET_TRADE"
+export const GET_TICKER="GET_TICKER"
 export type MessagefromAPi={
     type:typeof CREATE_ORDER
     ,
@@ -38,5 +40,16 @@ export type MessagefromAPi={
         amount:string,
         userId:string,
         txnid:string
+    }
+}|{
+    type:typeof GET_TRADE
+    data:{
+        market:string      
+    }
+    
+}|{
+    type:typeof GET_TICKER,
+    data:{
+        market:string
     }
 }
